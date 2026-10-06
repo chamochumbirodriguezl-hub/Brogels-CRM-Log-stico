@@ -37,10 +37,12 @@ export const Header: React.FC<HeaderProps> = ({
   const getSubtitle = () => {
     const companyLabel = 
       filterCompany === 'ALL' 
-        ? 'Grupo Brogels (Branko Cargo + Hogels Aduanas)' 
+        ? 'Grupo Brogels (Branko, Hogels & Compras Internacionales)' 
         : filterCompany === 'Branko' 
           ? 'Branko Cargo (Fletes Marítimos y Aéreos)' 
-          : 'Hogels Aduanas (Agenciamiento de Aduanas y SLI)';
+          : filterCompany === 'Hogels'
+            ? 'Hogels Aduanas (Agenciamiento de Aduanas y SLI)'
+            : 'Compras Internacionales & Sourcing en China (Maquinaria Pesada)';
     return companyLabel;
   };
 

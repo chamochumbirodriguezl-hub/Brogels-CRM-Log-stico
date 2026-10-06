@@ -1,19 +1,49 @@
 export type LeadStage = 'PROSPECCION' | 'GESTION_INFO' | 'COTIZADO' | 'GANADO' | 'PERDIDO';
 
-export type ServiceType = 'SLI' | 'Carga' | 'Aduana';
+export type ServiceType = 'SLI' | 'Carga' | 'Aduana' | 'Sourcing China';
 
-export type CompanyGroup = 'Branko' | 'Hogels';
+export type CompanyGroup = 'Branko' | 'Hogels' | 'Compras Internacionales';
 
 export type IncotermType = 'FOB' | 'EXW' | 'CIF' | 'CFR' | 'DDP' | 'DAP' | 'FCA' | 'CIP';
 
 export type TransportMode = 'Marítimo FCL' | 'Marítimo LCL' | 'Carga Aérea' | 'Terrestre Internacional' | 'Multimodal';
+
+export type SourcingStage = 
+  | 'Búsqueda Proveedor'
+  | 'Cotización Maquinaria'
+  | 'Inspección en China'
+  | 'Proforma Aprobada'
+  | 'Pago Realizado'
+  | 'En Tránsito';
+
+export interface SourcingData {
+  proveedorChina?: string;
+  ciudadInspeccion?: string; // Ej. Shanghai, Ningbo, Guangzhou, Qingdao, Changsha
+  estadoSourcing?: SourcingStage;
+  maquinariaMarca?: string; // Ej. SANY, XCMG, LiuGong, Zoomlion, CAT
+  maquinariaModelo?: string; // Ej. SY215C, XE215D, CLG922E
+  maquinariaEspecificaciones?: string; // Ej. Excavadora sobre orugas 22T, Balde 1.0m3, Motor Isuzu
+  partidaArancelaria?: string; // Ej. 8429.52.00.00
+  costoMaquinariaFob?: number;
+  comisionSourcingPct?: number;
+}
+
+export type CallOutcome = 
+  | 'Contestó - Interesado'
+  | 'Contestó - Enviar Cotización'
+  | 'Venta Realizada / Booking'
+  | 'Ocupado / Buzón'
+  | 'No Contesta'
+  | 'Número Inválido';
 
 export interface ActivityNote {
   id: string;
   fecha: string;
   autor: string;
   contenido: string;
-  tipo: 'nota' | 'cambio_etapa' | 'contacto' | 'cotizacion';
+  tipo: 'nota' | 'cambio_etapa' | 'contacto' | 'cotizacion' | 'llamada' | 'whatsapp';
+  duracionSegundos?: number;
+  resultadoLlamada?: CallOutcome;
 }
 
 export interface CostBreakdown {
@@ -23,6 +53,9 @@ export interface CostBreakdown {
   seguroUsd?: number;
   almacenajeCuadrillaUsd?: number;
   otrosGastosUsd?: number;
+  // Sourcing
+  costoMaquinariaFob?: number;
+  comisionSourcingUsd?: number;
 }
 
 export interface Lead {
@@ -33,15 +66,15 @@ export interface Lead {
   contacto: string;
   telefono: string;
   email?: string;
-  origen: string; // Meta Ads, Google Search, Referido, Cartera, Llamada Fría
-  servicio: ServiceType; // SLI, Carga, Aduana
+  origen: string; // Meta Ads, Google Search, Referido, Cartera, Llamada Fría, Sourcing China
+  servicio: ServiceType; // SLI, Carga, Aduana, Sourcing China
   etapa: LeadStage;
   motivoPerdido?: string;
   incoterm: IncotermType;
   pol: string; // Puerto de Origen
   pod: string; // Puerto de Destino
   modo: TransportMode;
-  equipos: string; // 1x40'HC, 1x20'GP, 15 Bultos, etc.
+  equipos: string; // 1x40'HC, 1x20'GP, Flat Rack, etc.
   pesoKg: number;
   volumenCbm: number;
   costoCompra: number;
@@ -50,6 +83,7 @@ export interface Lead {
   comercial: string;
   empresaGrupo: CompanyGroup;
   costosDesglose?: CostBreakdown;
+  sourcing?: SourcingData;
   notas?: string;
   historial?: ActivityNote[];
 }
@@ -75,7 +109,7 @@ export const STAGES: StageDefinition[] = [
   {
     key: 'GESTION_INFO',
     title: '2. Gestión Info',
-    description: 'Recolección de BL, Packing List, Invoice y pesos',
+    description: 'Recolección de BL, Packing List, Invoice, ficha de maquinaria',
     colorBorder: 'border-amber-500',
     badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
     badgeText: 'text-amber-400',
@@ -83,7 +117,7 @@ export const STAGES: StageDefinition[] = [
   {
     key: 'COTIZADO',
     title: '3. Cotización',
-    description: 'Tarifario emitido y negociación de flete/aduanas',
+    description: 'Tarifario emitido: Maquinaria + Flete + Aduana + Sourcing',
     colorBorder: 'border-purple-500',
     badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
     badgeText: 'text-purple-400',
@@ -91,7 +125,7 @@ export const STAGES: StageDefinition[] = [
   {
     key: 'GANADO',
     title: '4. Cierre Ganado',
-    description: 'Booking confirmado y orden de servicio aprobada',
+    description: 'Booking confirmado y orden de compra aprobada',
     colorBorder: 'border-emerald-500',
     badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
     badgeText: 'text-emerald-400',

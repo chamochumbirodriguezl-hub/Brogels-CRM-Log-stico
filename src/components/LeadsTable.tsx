@@ -9,7 +9,10 @@ import {
   Filter,
   Ship,
   Plane,
-  Truck
+  Truck,
+  Phone,
+  MessageSquare,
+  Wrench
 } from 'lucide-react';
 import { Lead, LeadStage, ServiceType, STAGES } from '../types/crm';
 
@@ -19,6 +22,8 @@ interface LeadsTableProps {
   onEditLead: (lead: Lead) => void;
   onDeleteLead: (id: string) => void;
   onMoveStage: (leadId: string, newStage: LeadStage) => void;
+  onCallLead: (lead: Lead) => void;
+  onWhatsAppLead: (lead: Lead) => void;
 }
 
 type SortField = 'fecha' | 'cliente' | 'precioVenta' | 'profit' | 'volumenCbm';
@@ -28,7 +33,9 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
   onSelectLead,
   onEditLead,
   onDeleteLead,
-  onMoveStage
+  onMoveStage,
+  onCallLead,
+  onWhatsAppLead
 }) => {
   const [sortField, setSortField] = useState<SortField>('fecha');
   const [sortAsc, setSortAsc] = useState<boolean>(false);
@@ -62,13 +69,14 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
       });
   }, [leads, filterStage, filterService, sortField, sortAsc]);
 
-  const getStageBadge = (etapa: LeadStage) => {
-    const stage = STAGES.find(s => s.key === etapa);
-    return (
-      <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${stage?.badgeBg || 'bg-slate-800 text-slate-300'}`}>
-        {stage?.title || etapa}
-      </span>
-    );
+  const getCompanyBadge = (empresa: string) => {
+    if (empresa === 'Branko') {
+      return 'bg-red-950/80 text-red-300 border border-red-800/60';
+    }
+    if (empresa === 'Hogels') {
+      return 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/60';
+    }
+    return 'bg-amber-950/80 text-amber-300 border border-amber-800/60';
   };
 
   return (
@@ -101,6 +109,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
             <option value="SLI">SLI (Carga + Aduana)</option>
             <option value="Carga">Carga Internacional</option>
             <option value="Aduana">Aduanas</option>
+            <option value="Sourcing China">Sourcing China (Maquinaria)</option>
           </select>
         </div>
 
@@ -131,7 +140,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
               <th className="p-3.5">Ruta (POL ➔ POD)</th>
               <th className="p-3.5 cursor-pointer hover:text-white" onClick={() => handleSort('volumenCbm')}>
                 <div className="flex items-center space-x-1">
-                  <span>Carga & CBM</span>
+                  <span>Carga / Maquinaria</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
@@ -148,7 +157,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="p-3.5">Comercial</th>
+              <th className="p-3.5 text-center">Contactar</th>
               <th className="p-3.5 text-center">Acciones</th>
             </tr>
           </thead>
@@ -182,19 +191,15 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
                         {item.cliente}
                       </p>
                       <p className="text-[10px] text-slate-400 font-mono">
-                        RUC: {item.ruc}
+                        RUC: {item.ruc} {item.contacto ? `· ${item.contacto}` : ''}
                       </p>
                     </td>
 
                     <td className="p-3.5">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          item.empresaGrupo === 'Branko'
-                            ? 'bg-red-950/80 text-red-300 border border-red-800/60'
-                            : 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/60'
-                        }`}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${getCompanyBadge(item.empresaGrupo)}`}
                       >
-                        {item.empresaGrupo}
+                        {item.empresaGrupo === 'Compras Internacionales' ? 'Sourcing China' : item.empresaGrupo}
                       </span>
                     </td>
 
@@ -212,9 +217,21 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
                       </div>
                     </td>
 
-                    <td className="p-3.5 font-mono text-[11px]">
-                      <p className="text-slate-200">{item.volumenCbm} CBM</p>
-                      <p className="text-[10px] text-slate-400">{item.equipos}</p>
+                    <td className="p-3.5 text-[11px]">
+                      {item.sourcing ? (
+                        <div>
+                          <p className="font-bold text-amber-300 flex items-center gap-1">
+                            <Wrench className="w-3 h-3 text-amber-400" />
+                            <span>{item.sourcing.maquinariaMarca} {item.sourcing.maquinariaModelo}</span>
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono">{item.sourcing.estadoSourcing}</p>
+                        </div>
+                      ) : (
+                        <div className="font-mono">
+                          <p className="text-slate-200">{item.volumenCbm} CBM</p>
+                          <p className="text-[10px] text-slate-400">{item.equipos}</p>
+                        </div>
+                      )}
                     </td>
 
                     <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
@@ -244,8 +261,27 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
                       </p>
                     </td>
 
-                    <td className="p-3.5 text-slate-400">
-                      <span className="truncate block max-w-[100px]">{item.comercial}</span>
+                    {/* BOTONES DIRECTOS: CLICK-TO-CALL & WHATSAPP */}
+                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onCallLead(item)}
+                          className="p-1.5 bg-blue-950/80 hover:bg-blue-900 border border-blue-800 text-blue-300 hover:text-white rounded-lg transition"
+                          title="Iniciar llamada IP / WebRTC con el cliente"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onWhatsAppLead(item)}
+                          className="p-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 hover:text-white rounded-lg transition"
+                          title="Abrir chat integrado de WhatsApp Business"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
 
                     <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>

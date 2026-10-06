@@ -17,7 +17,11 @@ import {
   MessageSquare, 
   Building2,
   FileCheck2,
-  AlertCircle
+  AlertCircle,
+  Wrench,
+  Clock,
+  CheckCircle2,
+  PhoneCall
 } from 'lucide-react';
 import { Lead, LeadStage, STAGES } from '../types/crm';
 
@@ -28,6 +32,8 @@ interface LeadDetailDrawerProps {
   onDelete: (id: string) => void;
   onMoveStage: (leadId: string, newStage: LeadStage) => void;
   onAddNote: (leadId: string, noteText: string) => void;
+  onCallLead?: (lead: Lead) => void;
+  onWhatsAppLead?: (lead: Lead) => void;
 }
 
 export const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({
@@ -37,6 +43,8 @@ export const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({
   onDelete,
   onMoveStage,
   onAddNote,
+  onCallLead,
+  onWhatsAppLead
 }) => {
   const [activeTab, setActiveTab] = useState<'detalle' | 'proforma' | 'historial'>('detalle');
   const [newNote, setNewNote] = useState('');
@@ -50,19 +58,21 @@ export const LeadDetailDrawer: React.FC<LeadDetailDrawerProps> = ({
 
   const handleCopyQuote = () => {
     const text = `
-*BROGELS LOGÍSTICA INTEGRAL*
-_Branko Cargo & Hogels Aduanas_
+*BROGELS LOGÍSTICA INTEGRAL & SOURCING CHINA*
+_Branko Cargo · Hogels Aduanas · Compras Internacionales_
 ----------------------------------
 *Cotización Logística:* ${lead.id}
 *Cliente:* ${lead.cliente} (RUC: ${lead.ruc})
-*Atención:* ${lead.contacto || 'Dpto. de Importaciones'}
+*Atención:* ${lead.contacto || 'Dpto. de Compras e Importaciones'}
 *Servicio:* ${lead.servicio} (${lead.incoterm})
 *Ruta:* ${lead.pol} ➔ ${lead.pod}
 *Modo:* ${lead.modo} | ${lead.equipos}
+${lead.sourcing ? `*Maquinaria:* ${lead.sourcing.maquinariaMarca} ${lead.sourcing.maquinariaModelo} | ${lead.sourcing.ciudadInspeccion}
+*Partida Arancelaria:* ${lead.sourcing.partidaArancelaria || '-'}` : ''}
 *Carga:* ${lead.pesoKg.toLocaleString()} kg | ${lead.volumenCbm} CBM
 
 *TARIFA OFERTA:* $${lead.precioVenta.toLocaleString()} USD
-- Incluye: Flete internacional y/o agenciamiento según Incoterm ${lead.incoterm}.
+- Incluye: ${lead.sourcing ? 'Costo Maquinaria FOB + Flete Branko + Aduanas Hogels + Comisión Sourcing' : `Flete internacional y/o agenciamiento según Incoterm ${lead.incoterm}`}.
 - Validez: 15 días calendario o según vigencia naviera.
 - Ejecutivo asignado: ${lead.comercial} (${lead.empresaGrupo})
 ----------------------------------
@@ -85,8 +95,11 @@ Gracias por su confianza en Grupo Brogels.
     setNewNote('');
   };
 
-  const getCleanPhone = (phone: string) => {
-    return phone.replace(/[^\d+]/g, '');
+  const formatDuration = (secs?: number) => {
+    if (!secs) return '';
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${mins}m ${s}s`;
   };
 
   return (
@@ -100,7 +113,9 @@ Gracias por su confianza en Grupo Brogels.
               className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${
                 lead.empresaGrupo === 'Branko'
                   ? 'bg-red-950 text-red-300 border border-red-800'
-                  : 'bg-indigo-950 text-indigo-300 border border-indigo-800'
+                  : lead.empresaGrupo === 'Hogels'
+                    ? 'bg-indigo-950 text-indigo-300 border border-indigo-800'
+                    : 'bg-amber-950 text-amber-300 border border-amber-800'
               }`}
             >
               {lead.empresaGrupo}
@@ -200,7 +215,7 @@ Gracias por su confianza en Grupo Brogels.
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Bitácora & Notas ({lead.historial?.length || 0})
+            Bitácora & Llamadas ({lead.historial?.length || 0})
           </button>
         </div>
 
@@ -211,42 +226,89 @@ Gracias por su confianza en Grupo Brogels.
           {activeTab === 'detalle' && (
             <div className="space-y-4">
               
-              {/* CONTACTO DIRECTO */}
-              <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+              {/* CONTACTO DIRECTO & CLICK-TO-CALL VOIP / WHATSAPP */}
+              <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <div>
                   <h4 className="font-bold text-sm text-white">{lead.cliente}</h4>
                   <p className="text-slate-400 text-xs font-mono mt-0.5">RUC: {lead.ruc}</p>
                   <p className="text-slate-300 text-xs mt-1">
                     Contacto: <strong className="text-white">{lead.contacto || 'No especificado'}</strong>
                   </p>
+                  <p className="text-red-400 font-mono text-xs font-bold mt-0.5">
+                    {lead.telefono || 'Sin teléfono'}
+                  </p>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  {lead.telefono && (
-                    <a
-                      href={`https://wa.me/${getCleanPhone(lead.telefono)}?text=${encodeURIComponent(
-                        `Hola ${lead.contacto || ''}, te saluda ${lead.comercial} de Grupo Brogels. Te escribo respecto a la cotización ${lead.id} para la ruta ${lead.pol} a ${lead.pod}.`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition"
+                <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                  {onCallLead && (
+                    <button
+                      type="button"
+                      onClick={() => onCallLead(lead)}
+                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-sm"
                     >
                       <Phone className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
-                    </a>
+                      <span>Llamar VoIP</span>
+                    </button>
                   )}
 
-                  {lead.email && (
-                    <a
-                      href={`mailto:${lead.email}?subject=Cotización Logística ${lead.id} - Grupo Brogels`}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition"
+                  {onWhatsAppLead && (
+                    <button
+                      type="button"
+                      onClick={() => onWhatsAppLead(lead)}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition shadow-sm"
                     >
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>Email</span>
-                    </a>
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>WhatsApp API</span>
+                    </button>
                   )}
                 </div>
               </div>
+
+              {/* SECCIÓN: GESTIÓN DE COMPRA EN ORIGEN (CHINA / SOURCING) */}
+              {(lead.sourcing || lead.empresaGrupo === 'Compras Internacionales') && (
+                <div className="bg-amber-950/30 p-4 rounded-xl border border-amber-800/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-bold text-amber-200 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <Wrench className="w-4 h-4 text-amber-400" />
+                      <span>Gestión de Compra en Origen (China & Maquinaria)</span>
+                    </h5>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/60 text-amber-300 border border-amber-700/60">
+                      {lead.sourcing?.estadoSourcing || 'Búsqueda Proveedor'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Proveedor / Fábrica en China:</span>
+                      <span className="font-bold text-slate-100">{lead.sourcing?.proveedorChina || 'En negociación'}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Ciudad / Oficina Inspección:</span>
+                      <span className="font-bold text-slate-100">{lead.sourcing?.ciudadInspeccion || 'Shanghai'}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Maquinaria (Marca & Modelo):</span>
+                      <span className="font-bold text-amber-300">
+                        {lead.sourcing?.maquinariaMarca || '-'} {lead.sourcing?.maquinariaModelo || ''}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[11px] block">Partida Arancelaria (HS Code):</span>
+                      <span className="font-mono text-slate-200 font-bold">{lead.sourcing?.partidaArancelaria || '-'}</span>
+                    </div>
+                  </div>
+
+                  {lead.sourcing?.maquinariaEspecificaciones && (
+                    <div className="pt-2 border-t border-amber-900/40 text-[11px] text-slate-300">
+                      <span className="text-slate-400 block mb-0.5">Especificaciones Técnicas:</span>
+                      <p className="bg-slate-950/70 p-2 rounded border border-amber-950">{lead.sourcing.maquinariaEspecificaciones}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* RUTA Y CARGA */}
               <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
@@ -311,10 +373,11 @@ Gracias por su confianza en Grupo Brogels.
                 {lead.costosDesglose && (
                   <div className="mt-2 text-[11px] space-y-1 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800/80">
                     <span className="text-slate-400 font-semibold block mb-1">Costos Directos Desglosados:</span>
-                    {lead.costosDesglose.fleteUsd ? <div className="flex justify-between text-slate-300"><span>Flete Internacional:</span><span className="font-mono">${lead.costosDesglose.fleteUsd}</span></div> : null}
-                    {lead.costosDesglose.gastosLocalesUsd ? <div className="flex justify-between text-slate-300"><span>Gastos Locales / THC:</span><span className="font-mono">${lead.costosDesglose.gastosLocalesUsd}</span></div> : null}
-                    {lead.costosDesglose.agenciamientoAduanalUsd ? <div className="flex justify-between text-slate-300"><span>Agenciamiento de Aduanas:</span><span className="font-mono">${lead.costosDesglose.agenciamientoAduanalUsd}</span></div> : null}
-                    {lead.costosDesglose.seguroUsd ? <div className="flex justify-between text-slate-300"><span>Seguro de Carga:</span><span className="font-mono">${lead.costosDesglose.seguroUsd}</span></div> : null}
+                    {lead.costosDesglose.costoMaquinariaFob ? <div className="flex justify-between text-amber-300"><span>Costo Maquinaria FOB:</span><span className="font-mono font-bold">${lead.costosDesglose.costoMaquinariaFob.toLocaleString()}</span></div> : null}
+                    {lead.costosDesglose.fleteUsd ? <div className="flex justify-between text-slate-300"><span>Flete Marítimo (Branko):</span><span className="font-mono">${lead.costosDesglose.fleteUsd.toLocaleString()}</span></div> : null}
+                    {lead.costosDesglose.gastosLocalesUsd ? <div className="flex justify-between text-slate-300"><span>Gastos Locales / THC:</span><span className="font-mono">${lead.costosDesglose.gastosLocalesUsd.toLocaleString()}</span></div> : null}
+                    {lead.costosDesglose.agenciamientoAduanalUsd ? <div className="flex justify-between text-slate-300"><span>Agenciamiento de Aduanas (Hogels):</span><span className="font-mono">${lead.costosDesglose.agenciamientoAduanalUsd.toLocaleString()}</span></div> : null}
+                    {lead.costosDesglose.comisionSourcingUsd ? <div className="flex justify-between text-emerald-300"><span>Comisión Sourcing Brogels:</span><span className="font-mono font-bold">+${lead.costosDesglose.comisionSourcingUsd.toLocaleString()}</span></div> : null}
                   </div>
                 )}
               </div>
@@ -368,7 +431,9 @@ Gracias por su confianza en Grupo Brogels.
                 <div className="flex justify-between items-start border-b-2 border-red-600 pb-4">
                   <div>
                     <h2 className="text-xl font-extrabold text-slate-950 tracking-wider">GRUPO BROGELS</h2>
-                    <p className="text-[11px] font-semibold text-red-600">BRANKO CARGO & HOGELS ADUANAS</p>
+                    <p className="text-[11px] font-semibold text-red-600">
+                      BRANKO CARGO · HOGELS ADUANAS · COMPRAS INTERNACIONALES
+                    </p>
                     <p className="text-[10px] text-slate-500">Av. Elmer Faucett 2851, Callao · Perú</p>
                     <p className="text-[10px] text-slate-500">operaciones@grupobrogels.com</p>
                   </div>
@@ -376,7 +441,7 @@ Gracias por su confianza en Grupo Brogels.
                     <span className="text-xs font-mono font-bold text-slate-800 block">PROFORMA Nº {lead.id}</span>
                     <span className="text-[10px] text-slate-500 block">Fecha: {lead.fecha}</span>
                     <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-300">
-                      Servicio: {lead.servicio}
+                      Unidad: {lead.empresaGrupo}
                     </span>
                   </div>
                 </div>
@@ -395,14 +460,14 @@ Gracias por su confianza en Grupo Brogels.
                   </div>
                 </div>
 
-                {/* DETALLE LOGÍSTICO */}
+                {/* DETALLE LOGÍSTICO Y MAQUINARIA */}
                 <table className="w-full text-left text-[11px] border border-slate-200">
                   <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px]">
                     <tr>
                       <th className="p-2 border">Incoterm</th>
                       <th className="p-2 border">Origen (POL)</th>
                       <th className="p-2 border">Destino (POD)</th>
-                      <th className="p-2 border">Modo / Equipo</th>
+                      <th className="p-2 border">Equipo / Carga</th>
                       <th className="p-2 border">Peso / Vol</th>
                     </tr>
                   </thead>
@@ -417,16 +482,28 @@ Gracias por su confianza en Grupo Brogels.
                   </tbody>
                 </table>
 
+                {/* SI HAY MAQUINARIA */}
+                {lead.sourcing && (
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-1">
+                    <p className="font-bold text-amber-900 text-xs">
+                      Detalle de Maquinaria Pesada: {lead.sourcing.maquinariaMarca} {lead.sourcing.maquinariaModelo}
+                    </p>
+                    <p className="text-[10px] text-amber-800">
+                      Proveedor: {lead.sourcing.proveedorChina || '-'} · Inspección: {lead.sourcing.ciudadInspeccion || 'China'} · HS Code: {lead.sourcing.partidaArancelaria || '-'}
+                    </p>
+                  </div>
+                )}
+
                 {/* TARIFARIO OFERTA */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center text-sm font-bold text-slate-900">
-                    <span>TOTAL OFERTA COMERCIAL:</span>
+                    <span>TOTAL OFERTA COMERCIAL CONSOLIDADA:</span>
                     <span className="text-xl font-mono text-red-700">
                       ${Number(lead.precioVenta || 0).toLocaleString()} USD
                     </span>
                   </div>
                   <p className="text-[10px] text-slate-600">
-                    * No incluye tributos de importación (Ad-valorem, IGV, IPM, Percepción) ni sobreestadías no acordadas.
+                    * Incluye costos de origen, flete internacional, agenciamiento aduanero y comisión de gestión según negociación.
                   </p>
                 </div>
 
@@ -454,7 +531,7 @@ Gracias por su confianza en Grupo Brogels.
                 <textarea
                   rows={2}
                   required
-                  placeholder="Ej. Cliente solicitó extensión de cotización / Confirmó envío de documentos..."
+                  placeholder="Ej. Se envió ficha técnica de maquinaria por WhatsApp / Cliente confirmó aprobación de proforma..."
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-red-500"
@@ -470,17 +547,37 @@ Gracias por su confianza en Grupo Brogels.
                 </div>
               </form>
 
-              {/* TIMELINE DE ENTRADAS */}
+              {/* TIMELINE DE ENTRADAS Y LLAMADAS */}
               <div className="space-y-3 pt-2">
                 {lead.historial && lead.historial.length > 0 ? (
                   lead.historial.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 space-y-1"
+                      className="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 space-y-1.5"
                     >
                       <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span className="font-semibold text-slate-200">{item.autor}</span>
-                        <span className="font-mono">{item.fecha}</span>
+                        <div className="flex items-center space-x-1.5">
+                          {item.tipo === 'llamada' ? (
+                            <span className="px-1.5 py-0.5 bg-blue-950 text-blue-300 border border-blue-800 rounded font-bold flex items-center gap-1">
+                              <PhoneCall className="w-2.5 h-2.5" />
+                              <span>Llamada VoIP ({formatDuration(item.duracionSegundos)})</span>
+                            </span>
+                          ) : item.tipo === 'whatsapp' ? (
+                            <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-800 rounded font-bold flex items-center gap-1">
+                              <MessageSquare className="w-2.5 h-2.5" />
+                              <span>WhatsApp API</span>
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-slate-200">{item.autor}</span>
+                          )}
+
+                          {item.resultadoLlamada && (
+                            <span className="text-amber-400 font-mono text-[9px]">
+                              · {item.resultadoLlamada}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-mono text-slate-500">{item.fecha}</span>
                       </div>
                       <p className="text-xs text-slate-300">{item.contenido}</p>
                     </div>

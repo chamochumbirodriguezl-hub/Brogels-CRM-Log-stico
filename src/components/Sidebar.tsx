@@ -52,10 +52,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="mt-3.5 bg-slate-900/80 p-2.5 rounded-lg border border-slate-800 text-xs">
             <div className="flex items-center justify-between text-slate-400 text-[11px]">
               <span>Grupo Comercial:</span>
-              <span className="text-red-400 font-bold">Branko & Hogels</span>
+              <span className="text-red-400 font-bold">Branko, Hogels & Sourcing</span>
             </div>
             <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
-              <span>Carga & Aduanas:</span>
+              <span>Carga, Aduanas & China:</span>
               <span className="text-emerald-400 font-semibold">{leadCount} operaciones</span>
             </div>
           </div>
@@ -170,6 +170,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                 <span>Hogels Aduanas</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setFilterCompany('Compras Internacionales')}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition flex items-center justify-between ${
+                filterCompany === 'Compras Internacionales'
+                  ? 'bg-amber-950/70 border border-amber-800/60 text-amber-200 font-semibold'
+                  : 'text-slate-400 hover:bg-slate-900/60 hover:text-slate-200'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Compras Internacionales (China)</span>
               </div>
             </button>
           </div>

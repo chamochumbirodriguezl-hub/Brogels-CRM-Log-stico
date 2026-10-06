@@ -13,11 +13,13 @@ import { LeadModal } from './components/LeadModal';
 import { LeadDetailDrawer } from './components/LeadDetailDrawer';
 import { QuickQuoter } from './components/QuickQuoter';
 import { AnalyticsView } from './components/AnalyticsView';
-import { Lead, LeadStage, CompanyGroup } from './types/crm';
+import { VoipModal } from './components/VoipModal';
+import { WhatsAppModal } from './components/WhatsAppModal';
+import { Lead, LeadStage, CompanyGroup, CallOutcome, ActivityNote } from './types/crm';
 import { INITIAL_LEADS } from './data/mockData';
 import { exportLeadsToCsv } from './utils/exportCsv';
 
-const STORAGE_KEY = 'brogels_crm_leads_v2';
+const STORAGE_KEY = 'brogels_crm_leads_v3';
 
 export default function App() {
   // Estado principal de leads con persistencia en localStorage
@@ -56,10 +58,16 @@ export default function App() {
   const [leadToEdit, setLeadToEdit] = useState<Lead | null>(null);
   const [selectedLeadForDetail, setSelectedLeadForDetail] = useState<Lead | null>(null);
 
+  // Estados de VoIP y WhatsApp
+  const [isVoipOpen, setIsVoipOpen] = useState(false);
+  const [voipLead, setVoipLead] = useState<Lead | null>(null);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [whatsAppLead, setWhatsAppLead] = useState<Lead | null>(null);
+
   // Filtrado de leads en memoria
   const filteredLeads = useMemo(() => {
     return leads.filter((l) => {
-      // Filtro de empresa (Branko vs Hogels vs Todo)
+      // Filtro de empresa (Branko vs Hogels vs Compras Internacionales vs Todo)
       if (filterCompany !== 'ALL' && l.empresaGrupo !== filterCompany) {
         return false;
       }
@@ -77,7 +85,9 @@ export default function App() {
           l.id.toLowerCase().includes(term) ||
           l.pol.toLowerCase().includes(term) ||
           l.pod.toLowerCase().includes(term) ||
-          l.comercial.toLowerCase().includes(term);
+          l.comercial.toLowerCase().includes(term) ||
+          (l.sourcing?.maquinariaMarca && l.sourcing.maquinariaMarca.toLowerCase().includes(term)) ||
+          (l.sourcing?.maquinariaModelo && l.sourcing.maquinariaModelo.toLowerCase().includes(term));
         if (!match) return false;
       }
       return true;
@@ -138,17 +148,77 @@ export default function App() {
     setLeads((prev) =>
       prev.map((l) => {
         if (l.id === leadId) {
-          const newHist = [
-            ...(l.historial || []),
-            {
-              id: `h_${Date.now()}`,
-              fecha: new Date().toLocaleString(),
-              autor: l.comercial,
-              tipo: 'nota' as const,
-              contenido: noteText
-            }
-          ];
-          const updated = { ...l, historial: newHist };
+          const newHist: ActivityNote = {
+            id: `h_${Date.now()}`,
+            fecha: new Date().toLocaleString(),
+            autor: l.comercial,
+            tipo: 'nota',
+            contenido: noteText
+          };
+          const updated = { ...l, historial: [newHist, ...(l.historial || [])] };
+          if (selectedLeadForDetail?.id === leadId) {
+            setSelectedLeadForDetail(updated);
+          }
+          return updated;
+        }
+        return l;
+      })
+    );
+  };
+
+  // Abrir llamada VoIP
+  const handleCallLead = (lead: Lead) => {
+    setVoipLead(lead);
+    setIsVoipOpen(true);
+  };
+
+  // Guardar resultado de llamada VoIP
+  const handleSaveCallLog = (leadId: string, duracionSegundos: number, outcome: CallOutcome, notas: string) => {
+    setLeads((prev) =>
+      prev.map((l) => {
+        if (l.id === leadId) {
+          const mins = Math.floor(duracionSegundos / 60);
+          const secs = duracionSegundos % 60;
+          const durationStr = `${mins}m ${secs}s`;
+          const logEntry: ActivityNote = {
+            id: `call_${Date.now()}`,
+            fecha: new Date().toLocaleString(),
+            autor: l.comercial,
+            tipo: 'llamada',
+            duracionSegundos,
+            resultadoLlamada: outcome,
+            contenido: `Llamada IP finalizada (${durationStr}) · Resultado: ${outcome}. ${notas ? `Detalles: "${notas}"` : ''}`
+          };
+          const updated = { ...l, historial: [logEntry, ...(l.historial || [])] };
+          if (selectedLeadForDetail?.id === leadId) {
+            setSelectedLeadForDetail(updated);
+          }
+          return updated;
+        }
+        return l;
+      })
+    );
+  };
+
+  // Abrir chat WhatsApp
+  const handleWhatsAppLead = (lead: Lead) => {
+    setWhatsAppLead(lead);
+    setIsWhatsAppOpen(true);
+  };
+
+  // Guardar mensaje enviado por WhatsApp
+  const handleSendWhatsAppMessage = (leadId: string, messageText: string) => {
+    setLeads((prev) =>
+      prev.map((l) => {
+        if (l.id === leadId) {
+          const logEntry: ActivityNote = {
+            id: `wa_${Date.now()}`,
+            fecha: new Date().toLocaleString(),
+            autor: l.comercial,
+            tipo: 'whatsapp',
+            contenido: `WhatsApp Business API: "${messageText}"`
+          };
+          const updated = { ...l, historial: [logEntry, ...(l.historial || [])] };
           if (selectedLeadForDetail?.id === leadId) {
             setSelectedLeadForDetail(updated);
           }
@@ -161,7 +231,7 @@ export default function App() {
 
   // Restablecer datos iniciales de demostración
   const handleResetData = () => {
-    if (window.confirm('¿Deseas restablecer los datos de demostración de Grupo Brogels?')) {
+    if (window.confirm('¿Deseas restablecer los datos de demostración de Grupo Brogels (incluyendo Sourcing China)?')) {
       setLeads(INITIAL_LEADS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LEADS));
     }
@@ -182,22 +252,23 @@ export default function App() {
       contacto: '',
       telefono: '',
       email: '',
-      origen: 'Cotizador',
+      origen: partial.servicio === 'Sourcing China' ? 'Sourcing China' : 'Cotizador',
       servicio: partial.servicio || 'SLI',
       etapa: 'COTIZADO',
       incoterm: partial.incoterm || 'FOB',
-      pol: partial.pol || 'CNNBO - Ningbo',
-      pod: partial.pod || 'PECLL - Callao',
-      modo: 'Marítimo FCL',
-      equipos: partial.equipos || "1x40'HC",
-      pesoKg: partial.pesoKg || 15000,
-      volumenCbm: partial.volumenCbm || 50,
-      costoCompra: partial.costoCompra || 2000,
-      precioVenta: partial.precioVenta || 2600,
-      profit: partial.profit || 600,
+      pol: partial.pol || 'CNSHA - Shanghai, China',
+      pod: partial.pod || 'PECLL - Callao, Perú',
+      modo: partial.modo || 'Marítimo FCL',
+      equipos: partial.equipos || "1x40'Flat Rack + 1x40'HC",
+      pesoKg: partial.pesoKg || 22000,
+      volumenCbm: partial.volumenCbm || 65,
+      costoCompra: partial.costoCompra || 50000,
+      precioVenta: partial.precioVenta || 58000,
+      profit: partial.profit || 8000,
       comercial: 'Yuri Vega',
-      empresaGrupo: 'Branko',
-      costosDesglose: partial.costosDesglose
+      empresaGrupo: partial.empresaGrupo || 'Compras Internacionales',
+      costosDesglose: partial.costosDesglose,
+      sourcing: partial.sourcing
     });
     setIsNewModalOpen(true);
   };
@@ -243,6 +314,8 @@ export default function App() {
               leads={filteredLeads}
               onMoveStage={handleMoveStage}
               onSelectLead={(l) => setSelectedLeadForDetail(l)}
+              onCallLead={handleCallLead}
+              onWhatsAppLead={handleWhatsAppLead}
             />
           )}
 
@@ -256,6 +329,8 @@ export default function App() {
               }}
               onDeleteLead={handleDeleteLead}
               onMoveStage={handleMoveStage}
+              onCallLead={handleCallLead}
+              onWhatsAppLead={handleWhatsAppLead}
             />
           )}
 
@@ -292,6 +367,30 @@ export default function App() {
         onDelete={handleDeleteLead}
         onMoveStage={handleMoveStage}
         onAddNote={handleAddNote}
+        onCallLead={handleCallLead}
+        onWhatsAppLead={handleWhatsAppLead}
+      />
+
+      {/* MODAL TELEFONÍA IP / WEBRTC (CLICK-TO-CALL) */}
+      <VoipModal
+        isOpen={isVoipOpen}
+        lead={voipLead}
+        onClose={() => {
+          setIsVoipOpen(false);
+          setVoipLead(null);
+        }}
+        onSaveCallLog={handleSaveCallLog}
+      />
+
+      {/* MODAL WHATSAPP BUSINESS API */}
+      <WhatsAppModal
+        isOpen={isWhatsAppOpen}
+        lead={whatsAppLead}
+        onClose={() => {
+          setIsWhatsAppOpen(false);
+          setWhatsAppLead(null);
+        }}
+        onSendMessage={handleSendWhatsAppMessage}
       />
 
     </div>

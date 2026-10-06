@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Building2, Users, MapPin, Award } from 'lucide-react';
+import { BarChart3, TrendingUp, Building2, Users, MapPin, Award, Wrench } from 'lucide-react';
 import { Lead, STAGES } from '../types/crm';
 import { COMMERCIAL_AGENTS } from '../data/mockData';
 
@@ -15,12 +15,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ leads }) => {
   // Desglose por empresa
   const brankoLeads = leads.filter(l => l.empresaGrupo === 'Branko');
   const hogelsLeads = leads.filter(l => l.empresaGrupo === 'Hogels');
+  const sourcingLeads = leads.filter(l => l.empresaGrupo === 'Compras Internacionales');
 
   const brankoVenta = brankoLeads.reduce((a, b) => a + (Number(b.precioVenta) || 0), 0);
   const brankoProfit = brankoLeads.reduce((a, b) => a + (Number(b.profit) || 0), 0);
 
   const hogelsVenta = hogelsLeads.reduce((a, b) => a + (Number(b.precioVenta) || 0), 0);
   const hogelsProfit = hogelsLeads.reduce((a, b) => a + (Number(b.profit) || 0), 0);
+
+  const sourcingVenta = sourcingLeads.reduce((a, b) => a + (Number(b.precioVenta) || 0), 0);
+  const sourcingProfit = sourcingLeads.reduce((a, b) => a + (Number(b.profit) || 0), 0);
 
   // Desglose por etapas (funnel)
   const stageStats = STAGES.map(s => {
@@ -57,20 +61,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ leads }) => {
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-red-500" />
-            <span>Panel de Analítica y Cierre Comercial</span>
+            <span>Panel de Analítica y Rendimiento Consolidado</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Métricas consolidadas de rendimiento para Grupo Brogels (Branko Cargo & Hogels Aduanas).
+            Métricas de Grupo Brogels: Branko Cargo, Hogels Aduanas & Compras Internacionales China.
           </p>
         </div>
 
         <div className="flex items-center space-x-6 text-xs font-mono">
           <div>
-            <span className="text-slate-400 block text-[10px]">Facturación Pipeline:</span>
+            <span className="text-slate-400 block text-[10px]">Facturación Pipeline Total:</span>
             <span className="text-base font-bold text-white">${totalVenta.toLocaleString()} USD</span>
           </div>
           <div>
-            <span className="text-slate-400 block text-[10px]">Profit Neto Estimado:</span>
+            <span className="text-slate-400 block text-[10px]">Profit Neto Consolidado:</span>
             <span className="text-base font-bold text-emerald-400">+${totalProfit.toLocaleString()} USD</span>
           </div>
         </div>
@@ -115,57 +119,81 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ leads }) => {
           </div>
         </div>
 
-        {/* DISTRIBUCIÓN POR EMPRESA (BRANKO VS HOGELS) */}
+        {/* DISTRIBUCIÓN POR EMPRESA (BRANKO, HOGELS, SOURCING) */}
         <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4 text-xs">
           <h3 className="font-bold text-sm text-slate-200 uppercase tracking-wider">
-            Distribución por Empresa del Grupo
+            Distribución por Unidad de Negocio
           </h3>
 
-          <div className="grid grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             {/* BRANKO CARGO */}
-            <div className="bg-slate-900 p-4 rounded-xl border border-red-900/50 space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                <h4 className="font-bold text-white text-sm">Branko Cargo</h4>
+            <div className="bg-slate-900 p-3.5 rounded-xl border border-red-900/50 space-y-2">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+                <h4 className="font-bold text-white text-xs truncate">Branko Cargo</h4>
               </div>
-              <p className="text-[11px] text-slate-400">Agencia de Carga Internacional</p>
+              <p className="text-[10px] text-slate-400">Flete Internacional</p>
               
-              <div className="pt-2 border-t border-slate-800 space-y-1 font-mono">
+              <div className="pt-2 border-t border-slate-800 space-y-1 font-mono text-[11px]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Operaciones:</span>
+                  <span className="text-slate-400 text-[10px]">Leads:</span>
                   <span className="font-bold text-white">{brankoLeads.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Venta Total:</span>
+                  <span className="text-slate-400 text-[10px]">Venta:</span>
                   <span className="font-bold text-white">${brankoVenta.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Profit Bruto:</span>
+                  <span className="text-slate-400 text-[10px]">Profit:</span>
                   <span className="font-bold text-emerald-400">+${brankoProfit.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
             {/* HOGELS ADUANAS */}
-            <div className="bg-slate-900 p-4 rounded-xl border border-indigo-900/50 space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                <h4 className="font-bold text-white text-sm">Hogels Aduanas</h4>
+            <div className="bg-slate-900 p-3.5 rounded-xl border border-indigo-900/50 space-y-2">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
+                <h4 className="font-bold text-white text-xs truncate">Hogels Aduanas</h4>
               </div>
-              <p className="text-[11px] text-slate-400">Agenciamiento Aduanal & SLI</p>
+              <p className="text-[10px] text-slate-400">Agenciamiento SLI</p>
               
-              <div className="pt-2 border-t border-slate-800 space-y-1 font-mono">
+              <div className="pt-2 border-t border-slate-800 space-y-1 font-mono text-[11px]">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Operaciones:</span>
+                  <span className="text-slate-400 text-[10px]">Leads:</span>
                   <span className="font-bold text-white">{hogelsLeads.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Venta Total:</span>
+                  <span className="text-slate-400 text-[10px]">Venta:</span>
                   <span className="font-bold text-white">${hogelsVenta.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 text-[11px]">Profit Bruto:</span>
+                  <span className="text-slate-400 text-[10px]">Profit:</span>
                   <span className="font-bold text-emerald-400">+${hogelsProfit.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* COMPRAS INTERNACIONALES (CHINA) */}
+            <div className="bg-slate-900 p-3.5 rounded-xl border border-amber-900/60 space-y-2">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                <h4 className="font-bold text-amber-200 text-xs truncate">Compras Int.</h4>
+              </div>
+              <p className="text-[10px] text-slate-400">Sourcing Maquinaria</p>
+              
+              <div className="pt-2 border-t border-slate-800 space-y-1 font-mono text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-[10px]">Leads:</span>
+                  <span className="font-bold text-white">{sourcingLeads.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-[10px]">Venta:</span>
+                  <span className="font-bold text-white">${sourcingVenta.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-[10px]">Profit:</span>
+                  <span className="font-bold text-emerald-400">+${sourcingProfit.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -181,7 +209,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ leads }) => {
             <Award className="w-4 h-4 text-amber-400" />
             <span>Rendimiento por Ejecutivo Comercial</span>
           </h3>
-          <span className="text-slate-500 text-[11px]">Pipeline y ganancias generadas</span>
+          <span className="text-slate-500 text-[11px]">Pipeline y margen generado</span>
         </div>
 
         <div className="overflow-x-auto">

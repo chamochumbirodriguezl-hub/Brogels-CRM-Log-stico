@@ -2,6 +2,68 @@ import { Lead } from '../types/crm';
 
 export const INITIAL_LEADS: Lead[] = [
   {
+    id: "SRC-2026-0810",
+    fecha: "2026-10-06",
+    cliente: "Constructora & Minera del Centro S.A.C.",
+    ruc: "20551122334",
+    contacto: "Ing. Roberto Alarcón",
+    telefono: "+51 984512369",
+    email: "ralarcon@mineradelcentro.pe",
+    origen: "Sourcing China",
+    servicio: "Sourcing China",
+    etapa: "GESTION_INFO",
+    incoterm: "FOB",
+    pol: "CNSHA - Shanghai, China",
+    pod: "PECLL - Callao, Perú",
+    modo: "Marítimo FCL",
+    equipos: "1x40'Flat Rack + 1x40'HC",
+    pesoKg: 22500,
+    volumenCbm: 68,
+    costoCompra: 58500, // Maquinaria FOB 52,000 + Flete 4,800 + Gastos Locales 1,700
+    precioVenta: 66900, // Venta total con comisión sourcing y margen flete/aduana
+    profit: 8400,
+    comercial: "Yuri Vega",
+    empresaGrupo: "Compras Internacionales",
+    costosDesglose: {
+      costoMaquinariaFob: 52000,
+      fleteUsd: 4800,
+      gastosLocalesUsd: 1700,
+      agenciamientoAduanalUsd: 450,
+      seguroUsd: 350,
+      comisionSourcingUsd: 4200
+    },
+    sourcing: {
+      proveedorChina: "SANY Heavy Industry Co., Ltd.",
+      ciudadInspeccion: "Changsha / Shanghai",
+      estadoSourcing: "Inspección en China",
+      maquinariaMarca: "SANY",
+      maquinariaModelo: "SY215C (Excavadora 22T)",
+      maquinariaEspecificaciones: "Motor Isuzu 4HK1X, Balde HD 1.0 m³, Zapatas 600mm, Certificación CE/ISO",
+      partidaArancelaria: "8429.52.00.00",
+      costoMaquinariaFob: 52000,
+      comisionSourcingPct: 7
+    },
+    notas: "Inspección técnica programada con peritaje en planta de Shanghai antes del despacho.",
+    historial: [
+      {
+        id: "h-src1",
+        fecha: "2026-10-06 10:15",
+        autor: "Yuri Vega",
+        tipo: "whatsapp",
+        contenido: "Se envió por WhatsApp video de prueba hidráulica emitido por inspector en Changsha."
+      },
+      {
+        id: "h-src2",
+        fecha: "2026-10-06 11:40",
+        autor: "Yuri Vega",
+        tipo: "llamada",
+        duracionSegundos: 195,
+        resultadoLlamada: "Contestó - Enviar Cotización",
+        contenido: "Llamada VoIP de 3m 15s. Cliente revisó especificaciones y solicita proforma consolidada CIF Callao."
+      }
+    ]
+  },
+  {
     id: "SLI-2026-1089",
     fecha: "2026-10-06",
     cliente: "Importadora San Martín S.A.C.",
@@ -37,15 +99,15 @@ export const INITIAL_LEADS: Lead[] = [
         id: "h1",
         fecha: "2026-10-06 09:30",
         autor: "Yuri Vega",
-        tipo: "nota",
-        contenido: "Se contactó al cliente por WhatsApp. Envió ficha técnica preliminar.",
+        tipo: "whatsapp",
+        contenido: "Se contactó al cliente por WhatsApp. Envió ficha técnica preliminar."
       },
       {
         id: "h2",
         fecha: "2026-10-06 11:15",
         autor: "Yuri Vega",
         tipo: "cambio_etapa",
-        contenido: "Pasó de Prospección a Gestión Info.",
+        contenido: "Pasó de Prospección a Gestión Info."
       }
     ]
   },
@@ -83,7 +145,60 @@ export const INITIAL_LEADS: Lead[] = [
         fecha: "2026-10-05 14:20",
         autor: "Mario Esteban",
         tipo: "cotizacion",
-        contenido: "Cotización #COT-ADU-88 emitida por $600 USD con tarifa aduanal fija.",
+        contenido: "Cotización #COT-ADU-88 emitida por $600 USD con tarifa aduanal fija."
+      }
+    ]
+  },
+  {
+    id: "SRC-2026-0745",
+    fecha: "2026-10-04",
+    cliente: "Maquinarias & Canteras del Norte S.R.L.",
+    ruc: "20488990011",
+    contacto: "David Cárdenas",
+    telefono: "+51 976543210",
+    email: "dcardenas@maquinariasnorte.pe",
+    origen: "Sourcing China",
+    servicio: "Sourcing China",
+    etapa: "COTIZADO",
+    incoterm: "FOB",
+    pol: "CNTAO - Qingdao, China",
+    pod: "PECLL - Callao, Perú",
+    modo: "Marítimo FCL",
+    equipos: "1x40'FR (Flat Rack)",
+    pesoKg: 17200,
+    volumenCbm: 52,
+    costoCompra: 44000,
+    precioVenta: 50800,
+    profit: 6800,
+    comercial: "Yuri Vega",
+    empresaGrupo: "Compras Internacionales",
+    costosDesglose: {
+      costoMaquinariaFob: 39000,
+      fleteUsd: 3800,
+      gastosLocalesUsd: 1200,
+      comisionSourcingUsd: 3500
+    },
+    sourcing: {
+      proveedorChina: "Xuzhou Construction Machinery Group (XCMG)",
+      ciudadInspeccion: "Xuzhou / Qingdao",
+      estadoSourcing: "Proforma Aprobada",
+      maquinariaMarca: "XCMG",
+      maquinariaModelo: "LW300KN (Cargador Frontal 3T)",
+      maquinariaEspecificaciones: "Motor Weichai Deutz 125HP, Balde 1.8 m³, Cabina con aire acondicionado ROPS/FOPS",
+      partidaArancelaria: "8429.51.00.00",
+      costoMaquinariaFob: 39000,
+      comisionSourcingPct: 8
+    },
+    notas: "Cliente solicitó confirmación de repuestos incluidos en paquete inicial (filtros, sellos, dientes de balde).",
+    historial: [
+      {
+        id: "h-src3",
+        fecha: "2026-10-04 15:30",
+        autor: "Yuri Vega",
+        tipo: "llamada",
+        duracionSegundos: 140,
+        resultadoLlamada: "Contestó - Interesado",
+        contenido: "Llamada VoIP de 2m 20s. Se acordó emisión de contrato de comisión y proforma de fábrica."
       }
     ]
   },
@@ -121,7 +236,7 @@ export const INITIAL_LEADS: Lead[] = [
         fecha: "2026-10-04 16:45",
         autor: "Yuri Vega",
         tipo: "cambio_etapa",
-        contenido: "Cliente aprobó cotización por correo formal. Booking solicitado.",
+        contenido: "Cliente aprobó cotización por correo formal. Booking solicitado."
       }
     ]
   },
@@ -161,91 +276,17 @@ export const INITIAL_LEADS: Lead[] = [
         fecha: "2026-10-03 10:10",
         autor: "Mario Esteban",
         tipo: "nota",
-        contenido: "En espera de confirmación de dimensiones de embalaje de madera certificada.",
-      }
-    ]
-  },
-  {
-    id: "SLI-2026-0992",
-    fecha: "2026-10-02",
-    cliente: "Agroexportadora Chira Valley",
-    ruc: "20443322110",
-    contacto: "Elena Morales",
-    telefono: "+51 965432109",
-    email: "emorales@chiravalley.com",
-    origen: "Llamada Fría",
-    servicio: "SLI",
-    etapa: "PROSPECCION",
-    incoterm: "FOB",
-    pol: "PEPAI - Paita",
-    pod: "USMIA - Miami",
-    modo: "Marítimo FCL",
-    equipos: "1x40'Reefer",
-    pesoKg: 21500,
-    volumenCbm: 58,
-    costoCompra: 3800,
-    precioVenta: 4600,
-    profit: 800,
-    comercial: "Yuri Vega",
-    empresaGrupo: "Hogels",
-    costosDesglose: {
-      fleteUsd: 3100,
-      gastosLocalesUsd: 400,
-      agenciamientoAduanalUsd: 300,
-    },
-    notas: "Exportación de mangos frescos. Requiere control de atmósfera y genset.",
-    historial: [
-      {
-        id: "h6",
-        fecha: "2026-10-02 12:00",
-        autor: "Yuri Vega",
-        tipo: "nota",
-        contenido: "Primer contacto en feria Expoalimentaria.",
-      }
-    ]
-  },
-  {
-    id: "CAR-2026-0294",
-    fecha: "2026-10-01",
-    cliente: "Tecnología Médica Peruana S.A.",
-    ruc: "20199887766",
-    contacto: "Dr. Víctor Cáceres",
-    telefono: "+51 981122334",
-    email: "vcaceres@tecmedicaperu.com",
-    origen: "Google Search",
-    servicio: "Carga",
-    etapa: "PERDIDO",
-    motivoPerdido: "Tarifa más económica con naviera directa",
-    incoterm: "FOB",
-    pol: "CNSZX - Shenzhen",
-    pod: "PECLL - Callao",
-    modo: "Marítimo LCL",
-    equipos: "Consolidado LCL",
-    pesoKg: 850,
-    volumenCbm: 4.2,
-    costoCompra: 680,
-    precioVenta: 890,
-    profit: 210,
-    comercial: "Mario Esteban",
-    empresaGrupo: "Branko",
-    notas: "Cliente optó por servicio consolidado directo de su proveedor.",
-    historial: [
-      {
-        id: "h7",
-        fecha: "2026-10-01 17:30",
-        autor: "Mario Esteban",
-        tipo: "cambio_etapa",
-        contenido: "Marcado como perdido. Motivo: precio del proveedor en origen.",
+        contenido: "En espera de confirmación de dimensiones de embalaje de madera certificada."
       }
     ]
   }
 ];
 
 export const COMMERCIAL_AGENTS = [
-  { nombre: "Yuri Vega", cargo: "Senior Freight Broker", empresa: "Branko Cargo", initials: "YV" },
+  { nombre: "Yuri Vega", cargo: "Senior Freight & Sourcing Broker", empresa: "Grupo Brogels", initials: "YV" },
   { nombre: "Mario Esteban", cargo: "Agente Aduanal Senior", empresa: "Hogels Aduanas", initials: "ME" },
-  { nombre: "Diana Paredes", cargo: "Key Account Manager SLI", empresa: "Grupo Brogels", initials: "DP" },
-  { nombre: "Carlos Vivanco", cargo: "Pricing & Operations", empresa: "Grupo Brogels", initials: "CV" }
+  { nombre: "Diana Paredes", cargo: "Key Account Manager SLI & Maquinarias", empresa: "Compras Internacionales", initials: "DP" },
+  { nombre: "Carlos Vivanco", cargo: "Pricing & China Logistics", empresa: "Branko Cargo", initials: "CV" }
 ];
 
 export const COMMON_PORTS = [
@@ -262,7 +303,16 @@ export const COMMON_PORTS = [
   "LIM - Jorge Chávez (Aéreo), Perú",
   "DEHAM - Hamburgo, Alemania",
   "NLRTM - Rotterdam, Países Bajos",
-  "ESBCN - Barcelona, España",
-  "COBUN - Buenaventura, Colombia",
-  "ECGYE - Guayaquil, Ecuador"
+  "ESBCN - Barcelona, España"
+];
+
+export const SOURCING_CITIES = [
+  "Shanghai (Hub Financiero y Puerto)",
+  "Ningbo (Puerto y Maquinaria Ligera)",
+  "Changsha (Hub SANY & Zoomlion)",
+  "Xuzhou (Hub Central XCMG)",
+  "Qingdao (Puerto Norte y Shandong Heavy)",
+  "Guangzhou / Foshan (Canton Fair y Equipamiento)",
+  "Yiwu (Sourcing de Bienes y Repuestos)",
+  "Tianjin (Puerto Norte Maquinaria Pesada)"
 ];
