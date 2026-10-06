@@ -1,0 +1,6 @@
+{
+  "name": "Brogels CRM Logístico",
+  "description": "Sistema CRM de logística integral y agenciamiento de carga y aduanas para Branko Cargo y Hogels Aduanas (Grupo Brogels).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
